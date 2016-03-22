@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace StyleCop.Console
 {
     public abstract class CommandLineArguments
     {
-        private readonly IDictionary<string, string> _keyValueMap = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+        readonly IDictionary<string, List<string>> _keyValueMap = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
 
         public int Count
         {
             get { return _keyValueMap.Count; }
         }
 
-        public CommandLineArguments(params string[] args)
+        protected CommandLineArguments(params string[] args)
         {
             for (var i = 0; i < args.Length; i++)
             {
@@ -21,16 +22,19 @@ namespace StyleCop.Console
                 {
                     if (IsNextArgAValue(args, i))
                     {
-                        if (_keyValueMap.ContainsKey(arg))
+                        List<string> values;
+                        if (!_keyValueMap.TryGetValue(arg, out values))
                         {
-                            throw new ArgumentException(string.Format("the key {0} is contained twice ", arg));
+                            values = new List<string>();
+                            _keyValueMap.Add(arg.Substring(1), values);
                         }
-                        _keyValueMap.Add(arg.Substring(1), args[i + 1]);
+
+                        values.Add(args[i + 1]);
                         i++;
                     }
                     else
                     {
-                        _keyValueMap.Add(arg.Substring(1), "");
+                        _keyValueMap.Add(arg.Substring(1), new List<string>());
                     }
                 }
                 else
@@ -40,16 +44,16 @@ namespace StyleCop.Console
             }
         }
 
-        private bool IsNextArgAValue(string[] args, int i)
+        bool IsNextArgAValue(string[] args, int i)
         {
             return i + 1 < args.Length && !IsKey(args[i + 1]);
         }
 
-        protected string this[string key]
+        protected IEnumerable<string> this [string key]
         {
             get
             {
-                return !_keyValueMap.ContainsKey(key) ? null : _keyValueMap[key];
+                return !_keyValueMap.ContainsKey(key) ? Enumerable.Empty<string>() : _keyValueMap[key];
             }
         }
 

@@ -1,6 +1,9 @@
-﻿namespace StyleCop.Console
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace StyleCop.Console
 {
-    internal class RunnerArguments : CommandLineArguments
+    class RunnerArguments : CommandLineArguments
     {
         public RunnerArguments(string[] args)
             : base(args)
@@ -9,22 +12,27 @@
 
         public string ProjectPath
         {
-            get { return this["project-path"] ?? this["p"]; }
+            get { return (this["project-path"].Concat(this["p"])).LastOrDefault(); }
         }
 
         public bool NotRecursive
         {
-            get { return (this["not-recursively"] ?? this["n"]) != null; }
+			get { return (this["not-recursively"].Concat(this["n"])).Any(); }
         }
 
         public bool Help
         {
-            get { return (this["help"] ?? this["?"]) != null; }
+			get { return (this["help"].Concat(this["?"])).Any(); }
         }
 
         public string SettingsLocation
         {
-            get { return this["settings-location"] ?? this["s"]; }
+            get { return (this["settings-location"].Concat(this["s"])).LastOrDefault(); }
         }
+
+		public IEnumerable<string> IgnoredPaths
+		{
+			get { return this["ignored-paths"].Concat(this["i"]); }
+		}
     }
 }
